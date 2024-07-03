@@ -59,9 +59,12 @@ configs: stores all the constants and enum classes. This is where you should cha
 key, app secret and account numbers. If you have different likings of expiration date and delta, you can 
 change your STO_TRADING_SETTINGS. Ideally, after you modify all the necessary variables in configs.py, 
 you can just run ```python3 main.py``` every day to trade. 
+
 options: composed of basic classes like stocks, options and option_chains. 
+
 trading: it deals with trading current positions of all accounts in trade_options.py; and it scan 
 through a list of stocks and trade it if there are significant price changes. 
+
 main.py: Run this every day to trade!!!!
 
 ## Note
