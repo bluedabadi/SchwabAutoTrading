@@ -1,7 +1,18 @@
 # SchwabAutoTrading (SAT)
 We automatically trade options via some simple algorithms and it's only applicable for Charles Schwab Accounts. 
 The author is Lin with MathPhdTrading and she explains her algorithms more in details in 
-her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5TL3x
+her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5TL3x. 
+## Brief Description of the Algorithms
+First we only sell puts and/or calls since I am a big believer of Theta trading. 
+So if you are an option buyers, you can stop here. 
+### How to STO a new put/call?
+The new put trade has the expiration date 4 weeks out, the delta between [-0.24, -0.16] and the premium > 0.01 x strike price;
+### Winning Trade?
+If an existing trade has a gain > 50% and abs(delta) <= 0.14. 
+We close this existing trade and open a new trade based on above.
+### Losing Trade?
+if an existing trade has the external value < 0.005 x strike price and expires in two weeks.
+We close this existing trade, and STO a new trade that has at least 2% lower strike price and $0.30 higher premium. 
 
 ## Installation
 
