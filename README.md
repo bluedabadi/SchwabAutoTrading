@@ -7,11 +7,11 @@ her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5T
 
 Before you follow the instruction below, you need to apply for a developer account from Schwab and then 
 follow the instruction from Tyler Bowers's github code. Tyler Bower is the author of schwabdev, the Schwab API.
-The code link is: https://github.com/tylerebowers/Schwab-API-Python
+The code link is: https://github.com/tylerebowers/Schwab-API-Python. 
 After you get your connection to Schwab account working, you should also put your APP key and APP secret to 
 the Config class in configs/config.py.
 
-Note: Always work under AAOT/, or the same level as README.md.
+Note: Always work under SchwabAutoTrading/, or the same level as README.md.
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install.
 
 You need to be in virtual environment to use pip. The following command creates a virtual environment myenv in
