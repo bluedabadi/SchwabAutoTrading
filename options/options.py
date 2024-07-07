@@ -205,7 +205,7 @@ class Options(object):
             option_type=option_type)
         if not option_candidates:
             print("No option candidates")
-            return None
+            return None, None
         # pick the first one and create an order;
         candidate = option_candidates[0]
         order = Options.create_an_option_order(ticker,
