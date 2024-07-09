@@ -26,11 +26,20 @@ class TradeOptions:
         self.account_number_to_hash = {}
         # We keep track of all the put options we sold to open; so we don't sell more than 3 puts;
         self.position_tracker = {}
+        self.options_by_account = {}
+        self.ticker_to_stock_map_by_account = {}
         for account in self.linked_accounts:
             # this will get the first linked account
             account_hash = account.get('hashValue') 
             account_number = account.get('accountNumber')
             self.account_number_to_hash[account_number] = account_hash
+            self.position_tracker[account_number] = {}
+            # Process the positions for each account;
+            positions = self.client.account_details(account_hash, fields="positions").json()
+            positions = positions.get('securitiesAccount').get('positions')
+            options, ticker_to_stock_map = self.process_positions(account_number, positions)
+            self.options_by_account[account_number] = options
+            self.ticker_to_stock_map_by_account[account_number] = ticker_to_stock_map
         self.order_ids = []
         self.order_dict_list = []
         return
@@ -49,6 +58,7 @@ class TradeOptions:
         print(f"Order id: {order_id}")
         self.order_ids.append(order_id)
         sleep(5)
+
         #  get specific order details
         # print("|\n|client.order_details(account_hash, order_id).json()", end="\n|")
         # print(self.client.order_details(account_hash, order_id).json())
@@ -70,41 +80,46 @@ class TradeOptions:
 
 
     def trade_all_accounts(self) -> None:
-        for account_number, account_hash in self.account_number_to_hash.items():
-            positions = self.client.account_details(account_hash, fields="positions").json()
-            positions = positions.get('securitiesAccount').get('positions')
-            options, ticker_to_stock_map = self.process_positions(positions)
+        for account_number in self.account_number_to_hash.keys():
             # For the trust account, we close the winning options, 
             # and roll out the losing options because we have no scash in the account;
             if account_number == TRUST_ACCOUNT_NUMBER:
-                self.process_winning_trades(account_number, options, ticker_to_stock_map)
-                self.process_losing_trades(account_number, options, ticker_to_stock_map)
+                self.process_winning_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
+                self.process_losing_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
             # # Since we have cash in the IRA account, so we always close the winning options, and 
             # # for the losing options, we let it be assigned; and sell to open a call option. 
             # elif account_number == IRA_ACCOUNT_NUMBER:
-            #     self.process_winning_trades(account_number, options, ticker_to_stock_map)
+            #     self.process_winning_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
         return
 
+    def constrain_to_current_positions(self, account_number, ticker_list) -> list[str]:
+        result_ticker_list = []
+        for ticker in ticker_list:
+            if not self.position_tracker[account_number].get(ticker):
+                continue
+            result_ticker_list.append(ticker)
+        return result_ticker_list
+    
     def sto_given_tickers(self, account_number, tickers_to_sell_dict, trade_reason=TradeReason.STO_FROM_LARGE_PRICE_CHANGE) -> None:
         # Sell to open a put option for the tickers in TICKERS_TO_SELL_PUT_OPTION
         # at account TRUST_ACCOUNT_NUMBER
-        sto_trade_setting = STO_TRADE_SETTINGS.get(account_number)
+        sto_trade_setting = STO_TRADE_SETTINGS.get("EARNINGS") if trade_reason == TradeReason.STO_FROM_EARNINGS else STO_TRADE_SETTINGS.get(account_number)
         for put_or_call in tickers_to_sell_dict.keys():
             for ticker in tickers_to_sell_dict.get(put_or_call):
                 option_type = OptionType.PUT if put_or_call == "put" else OptionType.CALL
                 options_with_this_ticker_and_type = []
                 num_of_options = 0
-                if self.position_tracker.get(ticker) and self.position_tracker.get(ticker).get(str(option_type)):
-                    options_with_this_ticker_and_type = self.position_tracker.get(ticker).get(str(option_type))
-                    num_of_options = len(self.position_tracker.get(ticker).get(str(option_type)))
+                if self.position_tracker[account_number].get(ticker) and self.position_tracker[account_number].get(ticker).get(str(option_type)):
+                    options_with_this_ticker_and_type = self.position_tracker[account_number].get(ticker).get(str(option_type))
+                    num_of_options = len(self.position_tracker[account_number].get(ticker).get(str(option_type)))
                 if option_type == OptionType.PUT and num_of_options >= STO_PUT_COUNT_MAX:
-                    print(f"We have sold {STO_PUT_COUNT_MAX} puts for this stock, skip.")
+                    print(f"We have sold {STO_PUT_COUNT_MAX} puts for stock {ticker}, skip.")
                     continue
                 elif option_type == OptionType.CALL: # we only sell covered calls;
-                    if not self.position_tracker.get(ticker) or not self.position_tracker.get(ticker).get("stock"):
+                    if not self.position_tracker[account_number].get(ticker) or not self.position_tracker[account_number].get(ticker).get("stock"):
                         print(f"We don't have {ticker} stocks, skip calls.")
                         continue
-                    covered_calls = self.position_tracker.get(ticker).get("stock")/100 - num_of_options
+                    covered_calls = self.position_tracker[account_number].get(ticker).get("stock")/100 - num_of_options
                     if covered_calls < 2:
                         print(f"We don't have enough {ticker} stocks, skip calls.")
                         continue
@@ -121,6 +136,7 @@ class TradeOptions:
                 )
                 # It's possible that we can't find a suitable option to sell to open, so we need to check if sto_order is None;
                 if not sto_order:
+                    print(f"Can't find a suitable option candidate to sell to open for {ticker}, skip.")
                     continue
                 symbol = sto_order.get('orderLegCollection')[0].get('instrument').get('symbol')
                 # if current positions have the same symbol, we don't sell to open again;
@@ -149,14 +165,14 @@ class TradeOptions:
                 option_chains = equity.get_option_chains(self.client)
                 delta = option_chains.get_delta_from_option_symbol(option.option_symbol)
                 option.set_delta(delta)
-                print(f"Option {option.option_symbol} delta is {option.delta}")
                 # open a new position, same as fresh start;
                 sto_trade_setting = STO_TRADE_SETTINGS.get(account_number)
 
                 if not option.is_winning(sto_trade_setting.get("max_delta_for_btc")):
+                    print(f"Delta has a large delta {option.delta}, not buy to close, skip.")
                     continue
                 # We close the winning position and open a new position;
-                print(f"Option {option.option_symbol} is winning, will close and open a new position.")
+                print(f"Option {option.option_symbol} with delta {option.delta} is winning, will close and open a new position.")
                 btc_order = option.create_btc_order()
                 candidate, sto_order = option.sto_after_a_win(
                     option_chains,
@@ -167,6 +183,7 @@ class TradeOptions:
                 )
                 # It's possible that we can't find a suitable option to sell to open, so we need to check if sto_order is None;
                 if not sto_order:
+                    print(f"Can't find a suitable option candidate to sell to open, only buy to close.")
                     self.trade_an_order(account_number, 
                                         btc_order, 
                                         option_profit=option.profit, 
@@ -200,6 +217,7 @@ class TradeOptions:
                 # Find the expiration date with this strike price has premium > the current option price.
                 candidate, sto_order = option.sto_after_btc_a_loss(option_chains)
                 if not sto_order:
+                    print(f"Can't find a suitable option candidate to sell to open, only buy to close.")
                     self.trade_an_order(account_number, btc_order, option_profit=option.profit, trade_reason=TradeReason.BTC_FROM_LOSING)
                     continue
                 # Otherwise roll out the order; the benefit of having two legs order is due to large spread;
@@ -216,28 +234,30 @@ class TradeOptions:
         return
 
 
-    def process_positions(self, positions) -> tuple:
+    def process_positions(self, account_number, positions) -> tuple:
         option_positions = []
         ticker_to_stock_map = {}
+        if not positions:
+            return None, None
         for position in positions:
             if position.get('instrument').get('assetType') == 'OPTION':
                 option = Options(position)
                 option_positions.append(option)
                 position_list = [option.option_symbol] * abs(int(option.short_quantity))
-                if not self.position_tracker.get(option.ticker):
-                    self.position_tracker[option.ticker] = {str(option.option_type): position_list}
-                elif not self.position_tracker.get(option.ticker).get(str(option.option_type)):
-                    self.position_tracker[option.ticker][str(option.option_type)] = position_list
+                if not self.position_tracker[account_number].get(option.ticker):
+                    self.position_tracker[account_number][option.ticker] = {str(option.option_type): position_list}
+                elif not self.position_tracker[account_number].get(option.ticker).get(str(option.option_type)):
+                    self.position_tracker[account_number][option.ticker][str(option.option_type)] = position_list
                 else:
-                    current_position_list = self.position_tracker.get(option.ticker).get(str(option.option_type))
-                    self.position_tracker[option.ticker][str(option.option_type)] = current_position_list + position_list
+                    current_position_list = self.position_tracker[account_number].get(option.ticker).get(str(option.option_type))
+                    self.position_tracker[account_number][option.ticker][str(option.option_type)] = current_position_list + position_list
             elif position.get('instrument').get('assetType') == 'EQUITY':
                 stock = Stocks(position)
                 ticker_to_stock_map[stock.ticker] = stock
-                if not self.position_tracker.get(stock.ticker):
-                    self.position_tracker[stock.ticker] = {"stock": stock.quantity}
+                if not self.position_tracker[account_number].get(stock.ticker):
+                    self.position_tracker[account_number][stock.ticker] = {"stock": stock.quantity}
                 else:
-                    self.position_tracker[stock.ticker]["stock"] = stock.quantity
+                    self.position_tracker[account_number][stock.ticker]["stock"] = stock.quantity
 
         # Afterwards, we add the stock price to the option positions;
         for option in option_positions:

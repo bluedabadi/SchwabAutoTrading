@@ -14,28 +14,38 @@ We close this existing trade and open a new trade based on above.
 if an existing trade has the external value < 0.005 x strike price and expires in two weeks.
 We close this existing trade, and STO a new trade that has at least 2% lower strike price and $0.30 higher premium. 
 
+### STO tickers that have large day/week/month change
+We do this based on two benefits:
+1. when a stock moves down significantly, the implied volatility (IV) of the stock increases, therefore a good candidate to sell puts;
+2. when a stock moves down significantly, we assume it won't go down too much, kinda like conditional probability. But don't trust this fully because some stocks go down for a reason (bad earning result, bad news). If that's the case, don't sell puts.
+
+### Sell earning trades
+IV of the stock is large!
+
 ## Installation
 
 Before you follow the instruction below, you need to apply for a developer account from Schwab and then 
 follow the instruction from Tyler Bowers's github code. Tyler Bower is the author of schwabdev, the Schwab API.
-The code link is: https://github.com/tylerebowers/Schwab-API-Python. 
+The code link is: https://github.com/tylerebowers/Schwab-API-Python
 After you get your connection to Schwab account working, you should also put your APP key and APP secret to 
 the Config class in configs/config.py.
+
+If you want to do earnings trade, you should apply for an account from apicalls.io and then subscribe to the cheapest plan (currently is $0 per month). You can get 500 calls per month that include only stocks, not option data. But earning calendars are covered. The good news is you are covered for 2024 Q3 since I have all the earning tickers in data/earnings_calendar.json. 
 
 Note: Always work under SchwabAutoTrading/, or the same level as README.md.
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install.
 
-You need to be in virtual environment to use pip. The following command creates a virtual environment myenv in
+You need to be in virtual environment to use pip. The following command creates a virtual environment .myenv in
 the current directory. You only run this when it is the first time to create a virtual environment.
 
 ```bash
-python3 -m venv myenv
+python3 -m venv .myenv
 ```
 
 And then activate it:
 
 ```bash
-source myenv/bin/activate
+source .myenv/bin/activate
 ```
 
 You may wish to deactivate it later by simply typing

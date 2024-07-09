@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import json
 
 from configs.config import TRUST_ACCOUNT_NUMBER, TICKERS_OF_IV_50_70, TICKERS_OF_IV_70_100, TICKERS_OF_IV_100_and_above
+from configs.utils import TradeReason
+from trading.earnings_calendar import EarningsCalendar
 from trading.stock_screener import StockScreener
 from trading.trade_options import TradeOptions
 from options.options import Options, OptionInstruction, OptionType
@@ -67,23 +69,21 @@ if __name__ == '__main__':
     #     json.dump(option_chain_json, f, ensure_ascii=False, indent=4)
     #     f.close()
 
-    # Scan through all positions of all accounts and rollout the winning and losing options;
+    # Step 1: Scan through all positions of all accounts and rollout the winning and losing options;
     trade_options.trade_all_accounts()
 
-    # Scan through high IV stocks and sell options if the day, week, or month change is larger than x percent
+    # Step 2: Scan through high IV stocks and sell options if the day, week, or month change is larger than x percent;
     tickers_to_scan = TICKERS_OF_IV_50_70 + TICKERS_OF_IV_70_100 + TICKERS_OF_IV_100_and_above
     stock_screener = StockScreener(client=trade_options.client, tickers_to_scan=tickers_to_scan)
-    tickers_to_sell_option_dict = stock_screener.day_change_larger_than_x_percent(5)
-    print("Day change > 5%", tickers_to_sell_option_dict)
-    tickers_to_sell_option_dict = stock_screener.week_change_larger_than_x_percent(10)
-    print("Week change > 10%", tickers_to_sell_option_dict)
-    tickers_to_sell_option_dict = stock_screener.month_change_larger_than_x_percent(20)
-    print("Month change > 20%", tickers_to_sell_option_dict)
-    tickers_to_sell_option_dict = {
-        "put": stock_screener.put_sell_candidates,
-        "call": stock_screener.call_sell_candidates
-    }
+    tickers_to_sell_option_dict = stock_screener.run(day_change=5, week_change=10, month_change=20)
     trade_options.sto_given_tickers(TRUST_ACCOUNT_NUMBER, tickers_to_sell_option_dict)
-    
+
+    # Step 3: Get earning tickers for a specific date and sell options for the earning tickers that are in the current positions;
+    earnings_calendar = EarningsCalendar()
+    earning_tickers = earnings_calendar.get_earning_tickers(datetime.now() + timedelta(days=10))
+    print("Earnings tickers", earning_tickers)
+    earning_tickers = trade_options.constrain_to_current_positions(TRUST_ACCOUNT_NUMBER, earning_tickers)
+    print("We only sell earning tickers that are in current positions", earning_tickers)
+    trade_options.sto_given_tickers(TRUST_ACCOUNT_NUMBER, {"put": earning_tickers}, trade_reason=TradeReason.STO_FROM_EARNINGS)
 
     trade_options.display_all_orders()

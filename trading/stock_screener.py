@@ -45,3 +45,12 @@ class StockScreener:
         self.call_sell_candidates.update(set(call_sell_candidates))
         # since I can only sell covered calls, I only return put candidates.
         return {"put": put_sell_candidates, "call": call_sell_candidates}
+    
+    def run(self, day_change=5, week_change=10, month_change=20) -> dict:
+        tickers_to_sell_option_dict = self.day_change_larger_than_x_percent(x_percent=day_change)
+        print(f"Day change > {day_change}%, {tickers_to_sell_option_dict}")
+        tickers_to_sell_option_dict = self.week_change_larger_than_x_percent(x_percent=week_change)
+        print(f"Week change > {week_change}%, {tickers_to_sell_option_dict}")
+        tickers_to_sell_option_dict = self.month_change_larger_than_x_percent(x_percent=month_change)
+        print(f"Month change > {month_change}%, {tickers_to_sell_option_dict}")
+        return {"put": self.put_sell_candidates, "call": self.call_sell_candidates}

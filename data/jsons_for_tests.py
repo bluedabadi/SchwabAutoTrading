@@ -1,3 +1,37 @@
+EARNING_CALENDAR_RESPONSE_JSON = {
+    "meta": {
+        "version": "v1.0",
+        "status": 200,
+        "copywrite": "https://apicalls.io",
+        "date": "2024-07-12",
+        "processedTime": "2024-07-08T01:48:08.165909Z"
+    },
+    "body": [
+        {
+            "lastYearReportDate": "7/14/2023",
+            "lastYearEPS": "$4.37",
+            "time": "time-pre-market",
+            "symbol": "JPM",
+            "name": "J P Morgan Chase & Co",
+            "marketCap": "$599,288,369,668",
+            "fiscalQuarterEnding": "Jun/2024",
+            "epsForecast": "$4.20",
+            "numberOfEstimates": "8"
+        },
+        {
+            "lastYearReportDate": "7/14/2023",
+            "lastYearEPS": "$1.25",
+            "time": "time-pre-market",
+            "symbol": "WFC",
+            "name": "Wells Fargo & Company",
+            "marketCap": "$211,479,889,616",
+            "fiscalQuarterEnding": "Jun/2024",
+            "epsForecast": "$1.27",
+            "numberOfEstimates": "8"
+        }
+    ]
+}
+
 TWO_LEGS_ORDER_JSON =  {'session': 'NORMAL', 
                         'duration': 'DAY', 
                         'orderType': 'NET_CREDIT', 

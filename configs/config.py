@@ -1,8 +1,10 @@
-
-
 class Config(object):
     APP_KEY = 'add_you_own_key_here'
     APP_SECRET = 'add_you_own_secret_here'
+    # This is a token for getting earnings calendar from apicalls.io
+    # It's optional if the earning tickers are in data/earnings_calendar.json 
+    # already or you don't do earnings trade;
+    API_CALLS_TOKEN = 'add_you_own_key_here'
 
 TRUST_ACCOUNT_NUMBER = 'add_your_account_number_here'
 IRA_ACCOUNT_NUMBER = 'add_your_account_number_here'
@@ -33,11 +35,18 @@ STO_TRADE_SETTINGS = {
         "min_premium_percentage": 0.01,
         "max_delta_for_btc": 0.16,
     },
+    # If it is earnings trade, the expiration date is the Friday after the earnings date.
+    "EARNINGS": {
+        "min_expiration_weeks": 0,
+        "min_delta": 0.14,
+        "max_delta": 0.24,
+        "min_premium_percentage": 0.005,
+        "max_delta_for_btc": 0.12,
+    }
 }
 # Some Magic Numbers
-BID_ASK_SPREAD_MAX = 0.6
+BID_ASK_SPREAD_MAX = 0.8
 VOLUME_INTEREST_MIN = 1
 ROLLOUT_LOSING_TRADE_STRIKE_PRICE_LOWER_PERCENTAGE = 0.02
 ROLLOUT_LOSING_TRADE_PREMIUM_INCREASE = 0.3
 STO_PUT_COUNT_MAX = 3
-
