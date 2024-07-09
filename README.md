@@ -13,19 +13,19 @@ We close this existing trade and open a new trade based on above.
 ### Losing Trade?
 if an existing trade has the external value < 0.005 x strike price and expires in two weeks.
 We close this existing trade, and STO a new trade that has at least 2% lower strike price and $0.30 higher premium. 
-
 ### STO tickers that have large day/week/month change
 We do this based on two benefits:
 1. when a stock moves down significantly, the implied volatility (IV) of the stock increases, therefore a good candidate to sell puts;
-2. when a stock moves down significantly, we assume it won't go down too much, kinda like conditional probability. But don't trust this fully because some stocks go down for a reason (bad earning result, bad news). If that's the case, don't sell puts.
+2. when a stock moves down significantly, we assume it won't go down too much, kinda like conditional probability. But don't trust this fully because some stocks go down for a reason (bad earning result, bad news and so on). If that's the case, don't sell puts.
+The new put trade has the expiration date 4 weeks out, the delta between [-0.24, -0.16] and the premium > 0.01 x strike price;
 
 ### Sell earning trades
-IV of the stock is large!
+IV of the stock is large, therefore a good candidate to sell puts. 
+The new put trade has the expiration date that Friday of the earnings week, the delta between [-0.24, -0.14] and the premium > 0.005 x strike price;
 
 ## Installation
 
-Before you follow the instruction below, you need to apply for a developer account from Schwab and then 
-follow the instruction from Tyler Bowers's github code. Tyler Bower is the author of schwabdev, the Schwab API.
+Before you follow the instruction below, you need to apply for a developer account from Schwab, apply for an App inside the developer account, enable ThinkOrSwim from your account and etc. (Basically to follow the instruction from Tyler Bowers's github code). Tyler Bower is the author of schwabdev, the Schwab API.
 The code link is: https://github.com/tylerebowers/Schwab-API-Python
 After you get your connection to Schwab account working, you should also put your APP key and APP secret to 
 the Config class in configs/config.py.
@@ -73,7 +73,8 @@ you can just run ```python3 main.py``` every day to trade.
 options: composed of basic classes like stocks, options and option_chains. 
 
 trading: it deals with trading current positions of all accounts in trade_options.py; and it scan 
-through a list of stocks and trade it if there are significant price changes. 
+through a list of stocks and trade it if there are significant price changes, if so, STO put/call trades; 
+and it check whether there is earnings next day, if so, STO a put that expires the Friday of the same week. 
 
 main.py: Run this every day to trade!!!!
 
