@@ -36,7 +36,9 @@ class Options(object):
         # Where do we get the stock price? We can get it from the Schwab API;
         self.stock_price = 0
         # How do we get the Greeks of an option? We can get it from the Schwab API;
-        self.delta = 0
+        self.delta = None
+        self.theta = None
+        self.theta_decay_percentage = None
         self.position_json = position_json
 
     def set_stock_price(self, stock_price) -> None:
@@ -45,6 +47,10 @@ class Options(object):
 
     def set_delta(self, delta) -> None:
         self.delta = delta
+        return
+    
+    def set_theta(self, theta) -> None:
+        self.theta = theta
         return
 
     def is_gain_larger_than_50_percent(self) -> bool:

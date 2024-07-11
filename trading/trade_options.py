@@ -94,6 +94,8 @@ class TradeOptions:
 
     def constrain_to_current_positions(self, account_number, ticker_list) -> list[str]:
         result_ticker_list = []
+        if not ticker_list:
+            return result_ticker_list
         for ticker in ticker_list:
             if not self.position_tracker[account_number].get(ticker):
                 continue

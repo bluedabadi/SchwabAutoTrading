@@ -49,11 +49,6 @@ class OptionChains(object):
                 option_chains_for_date = option_chains[expiration_date_key]
                 for strike_key in option_chains_for_date.keys():
                     option_chains_for_date_and_strike = option_chains_for_date[strike_key][0]
-                    # Filter out the strike prices that openInterest is 0 and bid-ask spread is too large;
-                    if option_chains_for_date_and_strike.get('openInterest') <= VOLUME_INTEREST_MIN:
-                        continue
-                    if abs(option_chains_for_date_and_strike.get('bid') - option_chains_for_date_and_strike.get('ask')) > BID_ASK_SPREAD_MAX:
-                        continue
                     # create a new dictionary with a subset of the keys in the option_chains_for_date_and_strike
                     option_chain_dict = {key: option_chains_for_date_and_strike[key] for key in EXISTING_OPTION_CHAINS_COLUMNS}
                     option_chain_dict['ticker'] = option_chains_json["symbol"]
@@ -72,7 +67,21 @@ class OptionChains(object):
 
     # Get the delta from the option symbol;
     def get_delta_from_option_symbol(self, option_symbol: str) -> float:
+        if option_symbol not in self.option_chains_df.index:
+            return None
         return self.option_chains_df.loc[option_symbol].get('delta')
+    
+    def get_theta_from_option_symbol(self, option_symbol: str) -> float:
+        if option_symbol not in self.option_chains_df.index:
+            return None
+        return self.option_chains_df.loc[option_symbol].get('theta')
+    
+    # This is a filter function to filter out the options that are not good for trading; 
+    def filter_option_candidates(self) -> pd.DataFrame:
+       # Filter out the strike prices that openInterest is 0 and bid-ask spread is too large;
+       data_df = self.option_chains_df[self.option_chains_df["openInterest"] > VOLUME_INTEREST_MIN]
+       data_df = data_df[abs(data_df["bid"] - data_df["ask"]) < BID_ASK_SPREAD_MAX]
+       return data_df
 
     # The expiration date needs to be larger than the min_expiration_date; and the delta is 
     # between min_delta and max_delta; and the premium percentage is larger than min_premium_percentage;
@@ -82,7 +91,8 @@ class OptionChains(object):
                                                                    max_delta: float = 0.24, 
                                                                    min_premium_percentage: float = 0.01, 
                                                                    option_type: OptionType = OptionType.PUT) -> list[dict]:
-        data_df = self.option_chains_df[self.option_chains_df["option_type"] == option_type]
+        data_df = self.filter_option_candidates()
+        data_df = data_df[data_df["option_type"] == option_type]
         # filter out the options that are not in the expiration date range
         data_df = data_df[data_df["expiration_date"] >= min_expiration_date]
         # filter out the options that are not in the delta range
@@ -99,7 +109,8 @@ class OptionChains(object):
     def get_put_option_candidates_from_max_strike_price_and_min_premium(self,
                                                                         max_strike_price: float,
                                                                         min_premium: float) -> list[dict]:
-        data_df = self.option_chains_df[self.option_chains_df["option_type"] == OptionType.PUT]
+        data_df = self.filter_option_candidates()
+        data_df = data_df[data_df["option_type"] == OptionType.PUT]
         # filter out the options that are larger than the max strike price
         data_df = data_df[data_df["strike_price"] <= max_strike_price]
         # filter out the options that are not in the premium percentage range
@@ -113,7 +124,8 @@ class OptionChains(object):
     def get_call_option_candidates_from_min_strike_price_and_min_premium_percentage(self,
                                                                                     min_strike_price: float,
                                                                                     min_premium_percentage: float) -> list[dict]:
-        data_df = self.option_chains_df[self.option_chains_df["option_type"] == OptionType.CALL]
+        data_df = self.filter_option_candidates()
+        data_df = data_df[data_df["option_type"] == OptionType.CALL]
         # filter out the options that are smaller than the min strike price
         data_df = data_df[data_df["strike_price"] >= min_strike_price]
         # filter out the options that are not in the premium percentage range
