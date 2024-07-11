@@ -18,10 +18,13 @@ We do this based on two benefits:
 1. when a stock moves down significantly, the implied volatility (IV) of the stock increases, therefore a good candidate to sell puts;
 2. when a stock moves down significantly, we assume it won't go down too much, kinda like conditional probability. But don't trust this fully because some stocks go down for a reason (bad earning result, bad news and so on). If that's the case, don't sell puts.
 The new put trade has the expiration date 4 weeks out, the delta between [-0.24, -0.16] and the premium > 0.01 x strike price;
-
 ### Sell earning trades
 IV of the stock is large, therefore a good candidate to sell puts. 
 The new put trade has the expiration date that Friday of the earnings week, the delta between [-0.24, -0.14] and the premium > 0.005 x strike price;
+### New Feature: Theta Analyzer
+The whole point of selling option trades is due to theta decay. A reasonable target is to have a theta decay of 0.1% of the account value per day.
+Since there are 250 trading days in a year, you are expected to gain 25% of annual return even if the stock doesn't change. Try uncomment the code in
+main.py and test it out yourself. You will get a "bold" prediction and a scatter plot. 
 
 ## Installation
 
@@ -65,6 +68,7 @@ Last, don't forget to add your python path in your .bashrc.
 
 ## Code Structure
 Except test/ and data/, there are main.py plus 3 folders: configs, options and trading_algorithms. 
+
 configs: stores all the constants and enum classes. This is where you should change your app 
 key, app secret and account numbers. If you have different likings of expiration date and delta, you can 
 change your STO_TRADING_SETTINGS. Ideally, after you modify all the necessary variables in configs.py, 
@@ -72,9 +76,12 @@ you can just run ```python3 main.py``` every day to trade.
 
 options: composed of basic classes like stocks, options and option_chains. 
 
-trading: it deals with trading current positions of all accounts in trade_options.py; and it scan 
-through a list of stocks and trade it if there are significant price changes, if so, STO put/call trades; 
-and it check whether there is earnings next day, if so, STO a put that expires the Friday of the same week. 
+trading: all the trading algorithm code is here. it deals with trading current positions of all accounts
+in trade_options.py; and in stock_screener.py it scan through a list of stocks and trade it if there
+are significant price changes, if so, STO put/call trades; 
+in earnings_calendar.py, it check whether there is earnings next day, if so, STO a put that expires the Friday of the same week. 
+and theta_analyzer.py gives you a portfolio theta decay rate and a nice scatter plot of all positions theta decay rate
+and expiration date. 
 
 main.py: Run this every day to trade!!!!
 
