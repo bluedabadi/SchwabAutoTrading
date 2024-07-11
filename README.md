@@ -5,20 +5,21 @@ her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5T
 ## Brief Description of the Algorithms
 First we only sell puts and/or calls since I am a big believer of Theta trading. 
 So if you are an option buyers, you can stop here. 
-### How to STO a new put/call?
+### Step 1: Scan through all positions of all accounts and rollout the winning and losing options;
+#### How to STO a new put/call?
 The new put trade has the expiration date 4 weeks out, the delta between [-0.24, -0.16] and the premium > 0.01 x strike price;
-### Winning Trade?
+#### Winning Trade?
 If an existing trade has a gain > 50% and abs(delta) <= 0.14. 
 We close this existing trade and open a new trade based on above.
-### Losing Trade?
+#### Losing Trade?
 if an existing trade has the external value < 0.005 x strike price and expires in two weeks.
 We close this existing trade, and STO a new trade that has at least 2% lower strike price and $0.30 higher premium. 
-### STO tickers that have large day/week/month change
+### Step 2: Scan through high IV stocks and sell options if the day, week, or month change is larger than x percent;
 We do this based on two benefits:
 1. when a stock moves down significantly, the implied volatility (IV) of the stock increases, therefore a good candidate to sell puts;
 2. when a stock moves down significantly, we assume it won't go down too much, kinda like conditional probability. But don't trust this fully because some stocks go down for a reason (bad earning result, bad news and so on). If that's the case, don't sell puts.
 The new put trade has the expiration date 4 weeks out, the delta between [-0.24, -0.16] and the premium > 0.01 x strike price;
-### Sell earning trades
+### Step 3: Get earning tickers for a specific date and sell options for the earning tickers that are in the current positions;
 IV of the stock is large, therefore a good candidate to sell puts. 
 The new put trade has the expiration date that Friday of the earnings week, the delta between [-0.24, -0.14] and the premium > 0.005 x strike price;
 ### New Feature: Theta Analyzer
