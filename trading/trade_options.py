@@ -83,13 +83,9 @@ class TradeOptions:
         for account_number in self.account_number_to_hash.keys():
             # For the trust account, we close the winning options, 
             # and roll out the losing options because we have no scash in the account;
-            if account_number == TRUST_ACCOUNT_NUMBER:
-                self.process_winning_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
-                self.process_losing_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
-            # # Since we have cash in the IRA account, so we always close the winning options, and 
-            # # for the losing options, we let it be assigned; and sell to open a call option. 
-            # elif account_number == IRA_ACCOUNT_NUMBER:
-            #     self.process_winning_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
+            print(f"Processing account {account_number}")
+            self.process_winning_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
+            self.process_losing_trades(account_number, self.options_by_account[account_number], self.ticker_to_stock_map_by_account[account_number])
         return
 
     def constrain_to_current_positions(self, account_number, ticker_list) -> list[str]:
@@ -102,10 +98,13 @@ class TradeOptions:
             result_ticker_list.append(ticker)
         return result_ticker_list
     
+    # Sell to open a put/call option for the tickers in tickers_to_sell_dict
+    # at account number account_number;
     def sto_given_tickers(self, account_number, tickers_to_sell_dict, trade_reason=TradeReason.STO_FROM_LARGE_PRICE_CHANGE) -> None:
-        # Sell to open a put option for the tickers in TICKERS_TO_SELL_PUT_OPTION
-        # at account TRUST_ACCOUNT_NUMBER
         sto_trade_setting = STO_TRADE_SETTINGS.get("EARNINGS") if trade_reason == TradeReason.STO_FROM_EARNINGS else STO_TRADE_SETTINGS.get(account_number)
+        if not tickers_to_sell_dict:
+            print("No tickers to sell options.")
+            return
         for put_or_call in tickers_to_sell_dict.keys():
             for ticker in tickers_to_sell_dict.get(put_or_call):
                 option_type = OptionType.PUT if put_or_call == "put" else OptionType.CALL
@@ -149,6 +148,9 @@ class TradeOptions:
         return
     
     def display_all_orders(self) -> None:
+        if not self.order_dict_list:
+            print("No orders to display.")
+            return
         order_df = pd.DataFrame.from_dict(self.order_dict_list).sort_values(by=["account_number", "trade_reason", "symbol"])
         # ignore the index
         order_df.reset_index(drop=True, inplace=True)
@@ -157,6 +159,8 @@ class TradeOptions:
         return
 
     def process_winning_trades(self, account_number, options, ticker_to_stock_map) -> None:
+        if not options:
+            return
         for option in options:
             if not option.is_gain_larger_than_50_percent():
                 continue
@@ -205,6 +209,8 @@ class TradeOptions:
         return
 
     def process_losing_trades(self, account_number, options, ticker_to_stock_map) -> None:
+        if not options:
+            return
         for option in options:
             if not option.is_losing():
                 continue

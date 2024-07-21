@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import json
 
-from configs.config import TRUST_ACCOUNT_NUMBER, IRA_ACCOUNT_NUMBER, TICKERS_OF_IV_50_70, TICKERS_OF_IV_70_100, TICKERS_OF_IV_100_and_above
+from configs.config import TRUST_ACCOUNT_NUMBER, TICKERS_OF_IV_50_70, TICKERS_OF_IV_70_100, TICKERS_OF_IV_100_and_above
 from configs.utils import TradeReason
 from trading.earnings_calendar import EarningsCalendar
 from trading.stock_screener import StockScreener
@@ -34,11 +34,11 @@ if __name__ == '__main__':
 
     # Not related with trading, but as a trading guidance;
     # Step 4: Analyze the theta decay of the options in the account;
-    theta_analyzer = ThetaAnalyzer(options=trade_options.options_by_account[IRA_ACCOUNT_NUMBER], 
-                                   ticker_to_stock_map=trade_options.ticker_to_stock_map_by_account[IRA_ACCOUNT_NUMBER],
-                                   client=trade_options.client)  
-    theta_analyzer.analyze()
-    theta_analyzer.scatter_plot()
+    if trade_options.options_by_account[TRUST_ACCOUNT_NUMBER]:
+        theta_analyzer = ThetaAnalyzer(options=trade_options.options_by_account[TRUST_ACCOUNT_NUMBER], 
+                                       ticker_to_stock_map=trade_options.ticker_to_stock_map_by_account[TRUST_ACCOUNT_NUMBER],
+                                       client=trade_options.client) 
+        theta_analyzer.scatter_plot()
 
 
     # Below are some examples of how to use the APIs;

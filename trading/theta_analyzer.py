@@ -16,6 +16,11 @@ class ThetaAnalyzer:
         self.total_principal = 0
         # The theta decay rate of the account;
         self.total_theta_decay_percentage = 0
+        self.predicted_return_per_year = 0
+        if not self.options:
+            print("No options in the account.")
+            return None
+        theta_decay_percentage_list = []
         for option in self.options:
             stock = self.ticker_to_stock_map.get(option.ticker)
             if stock is None:
@@ -27,23 +32,16 @@ class ThetaAnalyzer:
             option.set_theta(theta)
             if option.theta:
                 option.theta_decay_percentage = - option.theta * 100 / option.strike_price
-        return None
-    
-    def analyze(self):
-        for option in self.options:
-            if option.theta is None:
-                print(f"Option {option.option_symbol} has no theta value.")
-                continue
-            self.total_theta += option.theta * option.short_quantity * 100
-            self.total_principal += option.strike_price * option.short_quantity * 100
+                self.total_theta += option.theta * option.short_quantity * 100
+                self.total_principal += option.strike_price * option.short_quantity * 100
+                theta_decay_percentage_list.append((option.option_symbol, option.theta_decay_percentage))
         self.total_theta_decay_percentage = - self.total_theta * 100 / self.total_principal
         print(f"Total principal: {self.total_principal}, Total theta: {self.total_theta}, Theta decay percentage: {self.total_theta_decay_percentage}")
-        predicted_return_per_year = self.total_theta_decay_percentage * 250 * self.total_principal / 100
-        print(f"With this setting, even if the stock price does not change, the account value will increase ${predicted_return_per_year} in a year.")
+        self.predicted_return_per_year = self.total_theta_decay_percentage * 250 * self.total_principal / 100
+        print(f"With this setting, even if the stock price does not change, the account value will increase ${self.predicted_return_per_year} in a year.")
 
         # Find the top 5 options with the highest theta decay percentage,
         # and the top 5 options with the lowest theta decay percentage;
-        theta_decay_percentage_list = [(option.option_symbol, option.theta_decay_percentage) for option in self.options if option.theta is not None]
         theta_decay_percentage_list.sort(key=lambda x: x[1], reverse=True)
         print("Top 5 options with the highest theta decay percentage:")
         for i in range(5):
@@ -51,17 +49,17 @@ class ThetaAnalyzer:
         print("Top 5 options with the lowest theta decay percentage:")
         for i in range(1, 6):
             print(theta_decay_percentage_list[-i])
-        # print("Any option with theta decay percentage < 0.05%:")
-        # for tuple in theta_decay_percentage_list:
-        #     if tuple[1] < 0.05:
-        #         print(tuple)
-        return self.total_theta_decay_percentage
+        return None
+    
 
     def scatter_plot(self):
         import matplotlib.pyplot as plt
         """
         Scatter plot all the options in the account, with x_axis delta and y_axis theta/strike_price.
         """
+        if not self.options:
+            print("No options in the account.")
+            return None
         # x_axis is delta, y_axis is theta/strike_price; plot the scatter plot;
         deltas = [option.delta for option in self.options if option.theta is not None ]
         theta_decay_percentages = [option.theta_decay_percentage for option in self.options if option.theta is not None]
@@ -96,6 +94,6 @@ class ThetaAnalyzer:
                                    tickers=tickers,
                                    subtitle=subtitle)
 
-        fig.suptitle(f"Total Theta Decay Percentage: {round(self.total_theta_decay_percentage, 2)}")
+        fig.suptitle(f"Total Theta Decay Perc: {round(self.total_theta_decay_percentage, 2)}, Expected Annual Return: {round(self.predicted_return_per_year, 2)}")
         plt.show()
         return None
