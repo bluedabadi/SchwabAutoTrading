@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 
 from options.option_chains import OptionChains
-from configs.config import ROLLOUT_LOSING_TRADE_PREMIUM_INCREASE, ROLLOUT_LOSING_TRADE_STRIKE_PRICE_LOWER_PERCENTAGE
+from configs.config import ROLLOUT_LOSING_TRADE_PREMIUM_INCREASE, ROLLOUT_LOSING_TRADE_STRIKE_PRICE_LOWER_PERCENTAGE, ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE
 from configs.utils import OptionType, OptionInstruction
 
 
@@ -95,7 +95,8 @@ class Options(object):
                         min_expiration_weeks: int = 4, 
                         min_delta: float = 0.16, 
                         max_delta: float = 0.24, 
-                        min_premium_percentage: float = 0.01) -> dict:
+                        min_premium_percentage: float = 0.01,
+                        min_premium: float = ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE) -> dict:
         # open a new position, same as fresh start;
         if self.option_type == OptionType.PUT:
             return Options.sto_an_option_order(self.ticker, 
@@ -105,10 +106,12 @@ class Options(object):
                                             min_expiration_weeks, 
                                             min_delta, 
                                             max_delta, 
-                                            min_premium_percentage)
+                                            min_premium_percentage,
+                                            min_premium)
         option_candidates = option_chains.get_call_option_candidates_from_min_strike_price_and_min_premium_percentage(
             min_strike_price=self.strike_price,
-            min_premium_percentage=min_premium_percentage)
+            min_premium_percentage=min_premium_percentage,
+            min_premium=min_premium)
         if not option_candidates:
             print("No option candidates")
             return None, None
@@ -198,7 +201,8 @@ class Options(object):
                             min_expiration_weeks: int = 4, 
                             min_delta: float = 0.16, 
                             max_delta: float = 0.24, 
-                            min_premium_percentage: float = 0.01) -> dict:    
+                            min_premium_percentage: float = 0.01,
+                            min_premium: float = ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE) -> dict:    
         today_date = datetime.today().date()
         expiration_date = today_date + timedelta(days=(4 - today_date.weekday()) % 7 + 7*min_expiration_weeks)
         option_candidates = None
@@ -208,6 +212,7 @@ class Options(object):
             min_delta=min_delta,
             max_delta=max_delta,
             min_premium_percentage=min_premium_percentage,
+            min_premium=min_premium,
             option_type=option_type)
         if not option_candidates:
             print("No option candidates")

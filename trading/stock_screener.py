@@ -13,10 +13,13 @@ class StockScreener:
         self.put_sell_candidates = set()
         self.call_sell_candidates = set()
         for ticker in self.tickers_to_scan:
-            quote_json = client.quote(ticker).json()
-            stock = Stocks.initialize_from_quote_json(ticker, quote_json)
-            stock.get_price_history(client, datetime.datetime.now() - datetime.timedelta(days=30), datetime.datetime.now())
-            self.stocks.append(stock)
+            try:
+                quote_json = client.quote(ticker).json()
+                stock = Stocks.initialize_from_quote_json(ticker, quote_json)
+                stock.get_price_history(client, datetime.datetime.now() - datetime.timedelta(days=30), datetime.datetime.now())
+                self.stocks.append(stock)
+            except Exception as e:
+                print(f"Error in getting stock {ticker}, {e}")
         return
     
     def day_change_larger_than_x_percent(self, x_percent: float) -> dict:

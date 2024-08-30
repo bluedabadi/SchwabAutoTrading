@@ -2,7 +2,7 @@ import json
 import datetime
 import pandas as pd
 
-from configs.config import BID_ASK_SPREAD_MAX, VOLUME_INTEREST_MIN
+from configs.config import BID_ASK_SPREAD_MAX, VOLUME_INTEREST_MIN, ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE
 from configs.utils import OptionType
 
 OPTION_CHAINS_COLUMNS =[
@@ -89,7 +89,8 @@ class OptionChains(object):
                                                                    min_expiration_date: datetime.datetime, 
                                                                    min_delta: float = 0.16, 
                                                                    max_delta: float = 0.24, 
-                                                                   min_premium_percentage: float = 0.01, 
+                                                                   min_premium_percentage: float = 0.01,
+                                                                   min_premium: float = ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE, 
                                                                    option_type: OptionType = OptionType.PUT) -> list[dict]:
         data_df = self.filter_option_candidates()
         data_df = data_df[data_df["option_type"] == option_type]
@@ -98,6 +99,7 @@ class OptionChains(object):
         # filter out the options that are not in the delta range
         data_df = data_df[(data_df["delta"].abs() >= min_delta) & (data_df["delta"].abs() <= max_delta)]
         # filter out the options that are not in the premium percentage range
+        data_df = data_df[data_df["option_price"] > min_premium]
         data_df = data_df[data_df["option_price"] > min_premium_percentage * data_df["strike_price"]]
         # sort the options by expiration date, premium, and delta
         data_df = data_df.sort_values(by=["expiration_date", "option_price", "delta"])
@@ -123,13 +125,16 @@ class OptionChains(object):
     # and the premium percentage needs to be larger than the min_premium_percentage;
     def get_call_option_candidates_from_min_strike_price_and_min_premium_percentage(self,
                                                                                     min_strike_price: float,
-                                                                                    min_premium_percentage: float) -> list[dict]:
+                                                                                    min_premium: float = ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE,
+                                                                                    min_premium_percentage: float = 0.01) -> list[dict]:
         data_df = self.filter_option_candidates()
         data_df = data_df[data_df["option_type"] == OptionType.CALL]
         # filter out the options that are smaller than the min strike price
         data_df = data_df[data_df["strike_price"] >= min_strike_price]
         # filter out the options that are not in the premium percentage range
         data_df = data_df[data_df["option_price"] >= min_premium_percentage * data_df["strike_price"]]
+        data_df = data_df[data_df["option_price"] >= min_premium]
         # sort the options by expiration date, premium, and delta
         data_df = data_df.sort_values(by=["expiration_date", "option_price", "delta"])
+        # print(data_df[["ticker", "expiration_date", "strike_price", "option_price", "bid", "ask"]])
         return data_df.to_dict(orient='records')

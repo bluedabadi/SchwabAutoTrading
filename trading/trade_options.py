@@ -4,7 +4,7 @@ import schwabdev
 from time import sleep
 import pandas as pd
 
-from configs.config import Config, TRUST_ACCOUNT_NUMBER, IRA_ACCOUNT_NUMBER, STO_TRADE_SETTINGS, STO_PUT_COUNT_MAX
+from configs.config import Config, TRUST_ACCOUNT_NUMBER, IRA_ACCOUNT_NUMBER, STO_TRADE_SETTINGS, STO_PUT_COUNT_MAX, ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE
 from configs.utils import OptionType, TradeReason
 from options.options import Options
 from options.stocks import Stocks
@@ -185,7 +185,8 @@ class TradeOptions:
                     min_expiration_weeks=sto_trade_setting.get("min_expiration_weeks"),
                     min_delta=sto_trade_setting.get("min_delta"),
                     max_delta=sto_trade_setting.get("max_delta"),
-                    min_premium_percentage=sto_trade_setting.get("min_premium_percentage")
+                    min_premium_percentage=sto_trade_setting.get("min_premium_percentage"),
+                    min_premium=option.option_market_price + ROLLOUT_WINNING_TRADE_PREMIUM_INCREASE,
                 )
                 # It's possible that we can't find a suitable option to sell to open, so we need to check if sto_order is None;
                 if not sto_order:

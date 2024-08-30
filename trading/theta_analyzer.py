@@ -4,7 +4,7 @@
 # This file is used to analyze the theta decay of the options in an account.
 from datetime import datetime, timedelta
 
-from configs.utils import theta_scatter_plot
+from configs.utils import theta_scatter_plot, OptionType
 
 class ThetaAnalyzer:
     def __init__(self, client, options: list, ticker_to_stock_map: dict) -> None:
@@ -14,6 +14,7 @@ class ThetaAnalyzer:
         self.total_theta = 0
         # The sum of the strike prices of all the puts and calls in the account;
         self.total_principal = 0
+        self.total_put_principal = 0
         # The theta decay rate of the account;
         self.total_theta_decay_percentage = 0
         self.predicted_return_per_year = 0
@@ -34,9 +35,13 @@ class ThetaAnalyzer:
                 option.theta_decay_percentage = - option.theta * 100 / option.strike_price
                 self.total_theta += option.theta * option.short_quantity * 100
                 self.total_principal += option.strike_price * option.short_quantity * 100
+                # if the option is a put, we add the principal to a put_principal;
+                if option.option_type == OptionType.PUT:
+                    self.total_put_principal += option.strike_price * option.short_quantity * 100
                 theta_decay_percentage_list.append((option.option_symbol, option.theta_decay_percentage))
         self.total_theta_decay_percentage = - self.total_theta * 100 / self.total_principal
         print(f"Total principal: {self.total_principal}, Total theta: {self.total_theta}, Theta decay percentage: {self.total_theta_decay_percentage}")
+        print(f"Total put principal: {self.total_put_principal}; total call principal: {self.total_principal - self.total_put_principal}")
         self.predicted_return_per_year = self.total_theta_decay_percentage * 250 * self.total_principal / 100
         print(f"With this setting, even if the stock price does not change, the account value will increase ${self.predicted_return_per_year} in a year.")
 
@@ -61,11 +66,16 @@ class ThetaAnalyzer:
             print("No options in the account.")
             return None
         # x_axis is delta, y_axis is theta/strike_price; plot the scatter plot;
-        deltas = [option.delta for option in self.options if option.theta is not None ]
-        theta_decay_percentages = [option.theta_decay_percentage for option in self.options if option.theta is not None]
-        strike_prices = [option.strike_price for option in self.options if option.theta is not None]
-        expiration_dates = [option.expiration_date for option in self.options if option.theta is not None]
-        tickers = [option.ticker for option in self.options if option.theta is not None]
+        deltas = [float(option.delta) for option in self.options if option.theta and option.delta ]
+        theta_decay_percentages = [float(option.theta_decay_percentage) for option in self.options if option.theta and option.delta]
+        strike_prices = [float(option.strike_price) for option in self.options if option.theta and option.delta]
+        expiration_dates = [option.expiration_date for option in self.options if option.theta and option.delta]
+        tickers = [option.ticker for option in self.options if option.theta and option.delta]
+
+        delta_null_count = deltas.count(None)
+        theta_null_count = theta_decay_percentages.count(None)
+        strike_null_count = strike_prices.count(None)
+        print(f"delta_null_count: {delta_null_count}, theta_null_count: {theta_null_count}, strike_null_count: {strike_null_count}")
 
 
         # plot 1x2 subplots;
@@ -80,11 +90,11 @@ class ThetaAnalyzer:
                                    subtitle=subtitle)
         
         till_60_days = datetime.now().date() + timedelta(days=60)
-        deltas = [option.delta for option in self.options if option.theta is not None and option.expiration_date <= till_60_days]
-        theta_decay_percentages = [option.theta_decay_percentage for option in self.options if option.theta is not None and option.expiration_date <= till_60_days]
-        strike_prices = [option.strike_price for option in self.options if option.theta is not None and option.expiration_date <= till_60_days]
-        expiration_dates = [option.expiration_date for option in self.options if option.theta is not None and option.expiration_date <= till_60_days]
-        tickers = [option.ticker for option in self.options if option.theta is not None and option.expiration_date <= till_60_days]
+        deltas = [float(option.delta) for option in self.options if option.theta and option.delta and option.expiration_date <= till_60_days]
+        theta_decay_percentages = [float(option.theta_decay_percentage) for option in self.options if option.theta and option.delta and option.expiration_date <= till_60_days]
+        strike_prices = [float(option.strike_price) for option in self.options if option.theta and option.delta and option.expiration_date <= till_60_days]
+        expiration_dates = [option.expiration_date for option in self.options if option.theta and option.delta and option.expiration_date <= till_60_days]
+        tickers = [option.ticker for option in self.options if option.theta and option.delta and option.expiration_date <= till_60_days]
         subtitle = f"Scatter Plot for Positions Before {till_60_days}"
         ax[1] = theta_scatter_plot(ax=ax[1], 
                                    deltas=deltas, 
