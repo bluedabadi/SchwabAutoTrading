@@ -299,6 +299,7 @@ class TradeOptions:
                 call_options, option_type=OptionType.CALL)
             min_strike_price = (
                 cost_basis/100 - current_call_options_price_total)/num_cc_to_sell
+            min_strike_price = min(min_strike_price, stock.stock_price)
             print(
                 f"*** sell {num_cc_to_sell} covered calls for {ticker} with min_strike_price: {min_strike_price}")
             candidate, sto_order = Options.sto_an_option_order(
