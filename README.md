@@ -2,6 +2,7 @@
 We automatically trade options via some simple algorithms and it's only applicable for Charles Schwab Accounts. 
 The author is Lin with MathPhdTrading and she explains her algorithms more in details in 
 her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5TL3x. 
+
 *** I just added The Wheel Strategy, please try it out!!! ***
 ## Brief Description of the Algorithms
 First we only sell puts and/or calls since I am a big believer of Theta trading. 
