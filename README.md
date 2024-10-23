@@ -2,6 +2,7 @@
 We automatically trade options via some simple algorithms and it's only applicable for Charles Schwab Accounts. 
 The author is Lin with MathPhdTrading and she explains her algorithms more in details in 
 her Youtube Channel: https://youtube.com/@mathphdtrading-sv2024?si=3MZf12bxZ4E5TL3x. 
+*** I just added The Wheel Strategy, please try it out!!! ***
 ## Brief Description of the Algorithms
 First we only sell puts and/or calls since I am a big believer of Theta trading. 
 So if you are an option buyers, you can stop here. 
@@ -14,6 +15,11 @@ We close this existing trade and open a new trade based on above.
 #### Losing Trade?
 if an existing trade has the external value < 0.005 x strike price and expires in two weeks.
 We close this existing trade, and STO a new trade that has at least 2% lower strike price and $0.30 higher premium. 
+#### New to Step 1: The Wheel Strategy
+If you choose THE_WHEEL in ACCOUNT_TRADING_STRATEGY_MAP of configs/config.py, then we sell cash secured puts and 
+covered calls for this account. The new puts/calls settings are the same as the above STO a new put/call, so is the 
+definition of a winning trade. However in The Wheel strategy there is no losing trade any more. We will just let it 
+be assigned and then sell the trading of the other direction. 
 ### Step 2: Scan through high IV stocks and sell options if the day, week, or month change is larger than x percent;
 We do this based on two benefits:
 1. when a stock moves down significantly, the implied volatility (IV) of the stock increases, therefore a good candidate to sell puts;
@@ -22,7 +28,7 @@ The new put trade has the expiration date 4 weeks out, the delta between [-0.24,
 ### Step 3: Get earning tickers for a specific date and sell options for the earning tickers that are in the current positions;
 IV of the stock is large, therefore a good candidate to sell puts. 
 The new put trade has the expiration date that Friday of the earnings week, the delta between [-0.24, -0.14] and the premium > 0.005 x strike price;
-### New Feature: Theta Analyzer
+### Visualization Tool #1: Theta Analyzer
 The whole point of selling option trades is due to theta decay. A reasonable target is to have a theta decay of 0.1% of the account value per day.
 Since there are 250 trading days in a year, you are expected to gain 25% of annual return even if the stock doesn't change. Try uncomment the code in
 main.py and test it out yourself. You will get a "bold" prediction and a scatter plot. 
