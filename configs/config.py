@@ -2,22 +2,34 @@ class Config(object):
     APP_KEY = 'add_you_own_key_here'
     APP_SECRET = 'add_you_own_secret_here'
     # This is a token for getting earnings calendar from apicalls.io
-    # It's optional if the earning tickers are in data/earnings_calendar.json 
+    # It's optional if the earning tickers are in data/earnings_calendar.json
     # already or you don't do earnings trade;
     API_CALLS_TOKEN = 'add_you_own_key_here'
+
 
 TRUST_ACCOUNT_NUMBER = 'add_your_account_number_here'
 IRA_ACCOUNT_NUMBER = 'add_your_account_number_here'
 
+# The difference between ROLL_OUT and THE_WHEEL is that ROLL_OUT will close the losing trade
+# and open a new trade with the same ticker, while THE_WHEEL will let the losing trade assigned,
+# and then sell covered calls or cash-secured puts.
+# IF you are using a margin account, you should stick with ROLL_OUT; if you have enough cash, do THE_WHEEL.
+# Please consider tax implications when choosing THE_WHEEL.
+ACCOUNT_TRADING_STRATEGY_MAP = {
+    TRUST_ACCOUNT_NUMBER: "ROLL_OUT",
+    IRA_ACCOUNT_NUMBER: "THE_WHEEL",
+}
 
 TICKERS_OF_IV_50_70 = ["AFRM", "AI", "BHC", "BITO", "CAR", "CELH", "CHWY", "DELL", "FSLR",
-                       "HOOD", "JBLU", "LYFT", "MDB", "MRNA", "ONON", "ROKU", "SLB", "SNAP", "SOFI", 
-                        "SPOT", "TSLA", "U", "W", "Z" ]
+                       "HOOD", "JBLU", "LYFT", "MDB", "MRNA", "ONON", "ROKU", "SLB", "SNAP", "SOFI",
+                       "SPOT", "TSLA", "U", "W", "Z"]
 TICKERS_OF_IV_70_100 = ["RDDT", "COIN", "UPST", "SOUN", "TDOC", "XPEV", "ARDX", "SMCI", "ARM", "HIMS",
                         "ACMR", "MPW", "ZIM", "BILI", "SEDG", "RUN", "SOXL", "AG", "RIVN", "RIOT",
-                         "PCT", "VKTX", "IONQ", "MARA", "HLF", "ENVX"]
-TICKERS_OF_IV_100_and_above = ["IBRX", "CLSK", "CIFR", "NVAX", "IREN", "BBIO", "OKLO", "HE"]
-TICKERS_OF_OWNED_STOCKS = ['DQ', 'ENPH', 'JD', 'SQM', 'XPEV']
+                        "PCT", "VKTX", "IONQ", "MARA", "HLF", "ENVX"]
+TICKERS_OF_IV_100_and_above = ["IBRX", "CLSK",
+                               "CIFR", "NVAX", "IREN", "BBIO", "OKLO", "HE"]
+TICKERS_FOR_THE_WHEEL = TICKERS_OF_IV_50_70 + \
+    TICKERS_OF_IV_70_100 + TICKERS_OF_IV_100_and_above
 
 STO_TRADE_SETTINGS = {
     TRUST_ACCOUNT_NUMBER: {
