@@ -57,8 +57,13 @@ class TradeOptions:
         # round the option price to 2 decimal places; otherwise it's not accepted by the Schwab API;
         order['price'] = round(order['price'], 2)
         account_hash = self.account_number_to_hash.get(account_number)
-        # print("|\n|client.order_place(account_hash, order).json()", end="\n|")
-        # print(order)
+
+        print(order)
+        accept_order = input(
+            "|\n|****** Do you want to place the order? (y/n): ")
+        if accept_order.lower() != 'y':
+            print("****** Order not placed.")
+            return
         # place the order
         resp = self.client.order_place(account_hash, order)
         print(f"****** Response code: {resp}")
@@ -299,7 +304,7 @@ class TradeOptions:
                 call_options, option_type=OptionType.CALL)
             min_strike_price = (
                 cost_basis/100 - current_call_options_price_total)/num_cc_to_sell
-            min_strike_price = min(min_strike_price, stock.stock_price)
+            min_strike_price = max(min_strike_price, stock.stock_price)
             print(
                 f"*** sell {num_cc_to_sell} covered calls for {ticker} with min_strike_price: {min_strike_price}")
             candidate, sto_order = Options.sto_an_option_order(
