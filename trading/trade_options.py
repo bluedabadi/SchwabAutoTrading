@@ -353,7 +353,7 @@ class TradeOptions:
             ticker_info = self.position_tracker[account_number].get(ticker)
             num_of_put_options = 0
             if ticker_info:
-                num_of_put_options = len(ticker_info.get(str(OptionType.PUT)))
+                num_of_put_options = len(ticker_info.get(str(OptionType.PUT), []))
             if num_of_put_options >= STO_PUT_COUNT_MAX:
                 continue
             stock_quote = self.client.quote(ticker).json()
