@@ -23,9 +23,9 @@ if __name__ == '__main__':
     trade_options.sto_given_tickers(TRUST_ACCOUNT_NUMBER, tickers_to_sell_option_dict)
 
     # Step 3: Get earning tickers for a specific date and sell options for the earning tickers that are in the current positions;
-    # total_tickers = trade_options.get_existing_tickers()
-    # total_tickers = total_tickers.union(TICKERS_OF_IV_50_70 + TICKERS_OF_IV_70_100 + TICKERS_OF_IV_100_and_above)
-    # EarningsCalendar.generate_earnings_calendar_from_yahoo_finance(total_tickers)
+    total_tickers = trade_options.get_existing_tickers()
+    total_tickers = total_tickers.union(TICKERS_OF_IV_50_70 + TICKERS_OF_IV_70_100 + TICKERS_OF_IV_100_and_above)
+    EarningsCalendar.generate_earnings_calendar_from_yahoo_finance(total_tickers)
     earnings_calendar = EarningsCalendar()
     earning_tickers = earnings_calendar.get_earning_tickers(datetime.now())
     print("Earnings tickers", earning_tickers)
