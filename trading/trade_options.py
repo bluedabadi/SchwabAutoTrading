@@ -359,7 +359,7 @@ class TradeOptions:
             ticker_info = self.position_tracker[account_number].get(ticker)
             num_of_put_options = 0
             if ticker_info:
-                num_of_put_options = len(ticker_info.get(str(OptionType.PUT), [], []))
+                num_of_put_options = len(ticker_info.get(str(OptionType.PUT), []))
                 num_stocks = ticker_info.get("stock", 0)
                 print(f"ticker {ticker} has {num_stocks} stocks and {num_of_put_options} put options.")
             if num_of_put_options + num_stocks / 100 >= STO_PUT_COUNT_MAX:
