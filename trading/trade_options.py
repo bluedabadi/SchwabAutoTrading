@@ -33,6 +33,7 @@ class TradeOptions:
         self.available_funds_by_account = {}
         self.options_by_account = {}
         self.ticker_to_stock_map_by_account = {}
+        self.total_tickers = set()
         for account in self.linked_accounts:
             # this will get the first linked account
             account_hash = account.get('hashValue')
@@ -49,9 +50,14 @@ class TradeOptions:
                 account_number, positions)
             self.options_by_account[account_number] = options
             self.ticker_to_stock_map_by_account[account_number] = ticker_to_stock_map
+            self.total_tickers = self.total_tickers.union(
+                set(ticker_to_stock_map.keys()))
         self.order_ids = []
         self.order_dict_list = []
         return
+    
+    def get_existing_tickers(self) -> set:
+        return self.total_tickers
 
     def trade_an_order(self, account_number, order, option_profit=None, trade_reason=TradeReason.STO_FROM_other) -> None:
         # round the option price to 2 decimal places; otherwise it's not accepted by the Schwab API;
@@ -353,8 +359,10 @@ class TradeOptions:
             ticker_info = self.position_tracker[account_number].get(ticker)
             num_of_put_options = 0
             if ticker_info:
-                num_of_put_options = len(ticker_info.get(str(OptionType.PUT), []))
-            if num_of_put_options >= STO_PUT_COUNT_MAX:
+                num_of_put_options = len(ticker_info.get(str(OptionType.PUT), [], []))
+                num_stocks = ticker_info.get("stock", 0)
+                print(f"ticker {ticker} has {num_stocks} stocks and {num_of_put_options} put options.")
+            if num_of_put_options + num_stocks / 100 >= STO_PUT_COUNT_MAX:
                 continue
             stock_quote = self.client.quote(ticker).json()
             stock = Stocks.initialize_from_quote_json(ticker, stock_quote)
