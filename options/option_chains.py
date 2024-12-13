@@ -82,12 +82,15 @@ class OptionChains(object):
     # This is a filter function to filter out the options that are not good for trading;
     def filter_option_candidates(self) -> pd.DataFrame:
         # Filter out the strike prices that openInterest is 0 and bid-ask spread is too large;
-        data_df = self.option_chains_df[self.option_chains_df["totalVolume"]
-                                        > VOLUME_INTEREST_MIN]
-        data_df = self.option_chains_df[self.option_chains_df["openInterest"]
-                                        > VOLUME_INTEREST_MIN]
+        # filter columns = ["totalVolume", "openInterest", "bid", "ask"] that are not NaN
+        notna_columns = ["totalVolume", "openInterest", "bid", "ask"]
+        data_df = self.option_chains_df[self.option_chains_df[notna_columns].notna().all(axis=1)]
+        data_df = data_df[data_df["bid"] > 0.0]
+        data_df = data_df[data_df["totalVolume"] > VOLUME_INTEREST_MIN]
+        data_df = data_df[data_df["openInterest"] > VOLUME_INTEREST_MIN]
         data_df = data_df[abs(data_df["bid"] - data_df["ask"])
                           < BID_ASK_SPREAD_MAX]
+        # print(data_df[["option_type", "option_price", "bid", "ask", "totalVolume", "openInterest"]].head(5))
         return data_df
 
     # The expiration date needs to be larger than the min_expiration_date; and the delta is
